@@ -1,4 +1,4 @@
-const ADMIN_PIN = "1234";
+const ADMIN_PIN = "Pimp0n7911.";
 const STORE_KEY = "ciberescudo-data-v1";
 const VISITS_KEY = "ciberescudo-visits";
 const PRIVACY_POLICY_URL = "assets/politica_privacidad.md";
