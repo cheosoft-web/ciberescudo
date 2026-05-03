@@ -182,9 +182,27 @@ function normalizeData(source) {
     alerts: Array.isArray(source.alerts) ? source.alerts : structuredClone(defaults.alerts),
     crimes: Array.isArray(source.crimes) ? source.crimes : structuredClone(defaults.crimes),
     methods: Array.isArray(source.methods) ? source.methods : structuredClone(defaults.methods),
-    questions: Array.isArray(source.questions) ? source.questions : structuredClone(defaults.questions),
+    questions: normalizeQuestions(source.questions),
     reports: Array.isArray(source.reports) ? source.reports : []
   };
+}
+
+function normalizeQuestions(questions) {
+  const source = Array.isArray(questions) ? questions : structuredClone(defaults.questions);
+  return source.map(item => {
+    if (Array.isArray(item)) {
+      return {
+        question: item[0] || "",
+        correct: item[1] || "",
+        wrongs: Array.isArray(item[2]) ? item[2] : []
+      };
+    }
+    return {
+      question: item.question || "",
+      correct: item.correct || "",
+      wrongs: Array.isArray(item.wrongs) ? item.wrongs : []
+    };
+  });
 }
 
 function contentPayload() {
@@ -192,7 +210,7 @@ function contentPayload() {
     alerts: data.alerts,
     crimes: data.crimes,
     methods: data.methods,
-    questions: data.questions,
+    questions: normalizeQuestions(data.questions),
     updatedAt: serverTimestamp()
   };
 }
@@ -586,7 +604,9 @@ function renderQuestion() {
     return;
   }
 
-  const [question, correct, wrongs] = current;
+  const question = current.question;
+  const correct = current.correct;
+  const wrongs = current.wrongs || [];
   quiz.answered = false;
   document.querySelector("#quizProgress").textContent = `Pregunta ${quiz.index + 1} de ${quiz.questions.length}`;
   document.querySelector("#quizScore").textContent = `Puntaje: ${quiz.score}`;
@@ -741,8 +761,8 @@ function renderQuestionAdmin() {
   const rows = data.questions.map((item, index) => `
     <div class="admin-row">
       <div>
-        <strong>${escapeHtml(item[0])}</strong>
-        <p>Correcta: ${escapeHtml(item[1])}</p>
+        <strong>${escapeHtml(item.question)}</strong>
+        <p>Correcta: ${escapeHtml(item.correct)}</p>
       </div>
       <div class="row-actions">
         <button class="btn secondary" type="button" data-action="edit-question" data-index="${index}">Editar</button>
@@ -790,12 +810,12 @@ async function handleAdminSubmit(event) {
   const editIndex = formData.get("editIndex");
 
   if (kind === "questions") {
-    const item = [
-      formData.get("question").trim(),
-      formData.get("correct").trim(),
-      formData.get("wrongs").split(";").map(item => item.trim()).filter(Boolean).slice(0, 5)
-    ];
-    if (item[2].length < 2) return alert("Agrega al menos dos opciones incorrectas separadas por punto y coma.");
+    const item = {
+      question: formData.get("question").trim(),
+      correct: formData.get("correct").trim(),
+      wrongs: formData.get("wrongs").split(";").map(item => item.trim()).filter(Boolean).slice(0, 5)
+    };
+    if (item.wrongs.length < 2) return alert("Agrega al menos dos opciones incorrectas separadas por punto y coma.");
     if (editIndex !== "") data.questions[Number(editIndex)] = item;
     else data.questions.push(item);
   } else {
@@ -909,9 +929,9 @@ function fillCollectionForm(collection, index) {
 function fillQuestionForm(index) {
   const item = data.questions[index];
   const form = document.querySelector(`form[data-form="questions"]`);
-  form.question.value = item[0];
-  form.correct.value = item[1];
-  form.wrongs.value = item[2].join("; ");
+  form.question.value = item.question;
+  form.correct.value = item.correct;
+  form.wrongs.value = (item.wrongs || []).join("; ");
   form.editIndex.value = index;
   form.scrollIntoView({ behavior: "smooth", block: "center" });
 }
