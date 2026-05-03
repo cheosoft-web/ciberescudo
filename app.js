@@ -5,6 +5,20 @@ import {
   signInWithEmailAndPassword,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  getFirestore,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAbmxxyNZqPBqe07YvCfPhRYreDmj6DKPA",
@@ -18,6 +32,9 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
+const db = getFirestore(firebaseApp);
+const contentRef = doc(db, "site", "content");
+const reportsRef = collection(db, "reports");
 
 const STORE_KEY = "ciberescudo-data-v1";
 const VISITS_KEY = "ciberescudo-visits";
@@ -147,19 +164,98 @@ let quiz = { questions: [], index: 0, score: 0, answered: false };
 let activeTab = "alerts";
 let carouselTimer = null;
 let carouselPaused = false;
+let remoteContentLoaded = false;
+let contentUnsubscribe = null;
 
 function loadData() {
   const saved = localStorage.getItem(STORE_KEY);
-  if (!saved) return structuredClone(defaults);
+  if (!saved) return normalizeData(defaults);
   try {
-    return { ...structuredClone(defaults), ...JSON.parse(saved) };
+    return normalizeData({ ...structuredClone(defaults), ...JSON.parse(saved) });
   } catch {
-    return structuredClone(defaults);
+    return normalizeData(defaults);
   }
 }
 
-function saveData() {
+function normalizeData(source) {
+  return {
+    alerts: Array.isArray(source.alerts) ? source.alerts : structuredClone(defaults.alerts),
+    crimes: Array.isArray(source.crimes) ? source.crimes : structuredClone(defaults.crimes),
+    methods: Array.isArray(source.methods) ? source.methods : structuredClone(defaults.methods),
+    questions: Array.isArray(source.questions) ? source.questions : structuredClone(defaults.questions),
+    reports: Array.isArray(source.reports) ? source.reports : []
+  };
+}
+
+function contentPayload() {
+  return {
+    alerts: data.alerts,
+    crimes: data.crimes,
+    methods: data.methods,
+    questions: data.questions,
+    updatedAt: serverTimestamp()
+  };
+}
+
+function saveLocalData() {
   localStorage.setItem(STORE_KEY, JSON.stringify(data));
+}
+
+async function saveData() {
+  saveLocalData();
+  try {
+    await setDoc(contentRef, contentPayload(), { merge: true });
+  } catch (error) {
+    console.warn("No se pudo guardar en Firestore.", error);
+    alert("No se pudo guardar en Firestore. Revisa las reglas, el login de admin o tu conexión.");
+  }
+}
+
+function bindFirestoreContent() {
+  if (contentUnsubscribe) contentUnsubscribe();
+  contentUnsubscribe = onSnapshot(contentRef, snapshot => {
+    if (!snapshot.exists()) {
+      remoteContentLoaded = false;
+      return;
+    }
+    remoteContentLoaded = true;
+    data = normalizeData({ ...data, ...snapshot.data(), reports: data.reports });
+    saveLocalData();
+    renderPublic();
+    if (!document.querySelector("#adminPanel")?.hidden) renderAdmin();
+  }, error => {
+    console.warn("No se pudo leer contenido desde Firestore.", error);
+  });
+}
+
+async function ensureRemoteContent() {
+  if (remoteContentLoaded) return;
+  try {
+    const snapshot = await getDoc(contentRef);
+    if (snapshot.exists()) {
+      remoteContentLoaded = true;
+      data = normalizeData({ ...data, ...snapshot.data(), reports: data.reports });
+      saveLocalData();
+      renderPublic();
+      return;
+    }
+    await setDoc(contentRef, contentPayload(), { merge: true });
+    remoteContentLoaded = true;
+  } catch (error) {
+    console.warn("No se pudo inicializar Firestore.", error);
+  }
+}
+
+async function loadReports() {
+  try {
+    const snapshot = await getDocs(query(reportsRef, orderBy("createdAt", "desc")));
+    data.reports = snapshot.docs.map(reportDoc => ({
+      id: reportDoc.id,
+      ...reportDoc.data()
+    }));
+  } catch (error) {
+    console.warn("No se pudieron cargar reportes desde Firestore.", error);
+  }
 }
 
 function shuffle(items) {
@@ -433,21 +529,31 @@ function openMethodDetail(index) {
 function bindReports() {
   document.querySelector("#reportForm").addEventListener("submit", async event => {
     event.preventDefault();
+    const status = document.querySelector("#reportStatus");
+    status.textContent = "Guardando reporte...";
     const form = new FormData(event.currentTarget);
     const images = await filesToDataUrls(event.currentTarget.elements.images?.files || []);
-    data.reports.unshift({
-      id: crypto.randomUUID(),
+    const report = {
       date: new Date().toLocaleString("es-BO"),
       type: form.get("type").trim(),
       story: form.get("story").trim(),
       city: form.get("city").trim(),
       contact: form.get("contact").trim(),
-      images
-    });
-    saveData();
-    event.currentTarget.reset();
-    document.querySelector("#reportStatus").textContent = "Reporte guardado para revisión del administrador.";
-    if (!document.querySelector("#adminPanel").hidden) renderAdmin();
+      images,
+      status: "pending",
+      createdAt: serverTimestamp()
+    };
+
+    try {
+      const reportDoc = await addDoc(reportsRef, report);
+      data.reports.unshift({ ...report, id: reportDoc.id });
+      event.currentTarget.reset();
+      status.textContent = "Reporte guardado en Firestore para revisión del administrador.";
+      if (!document.querySelector("#adminPanel").hidden) renderAdmin();
+    } catch (error) {
+      console.warn("No se pudo guardar el reporte en Firestore.", error);
+      status.textContent = "No se pudo guardar el reporte. Revisa conexión o reglas de Firestore.";
+    }
   });
 }
 
@@ -557,10 +663,12 @@ function bindAdmin() {
   document.querySelector("#adminContent").addEventListener("submit", handleAdminSubmit);
 }
 
-function showAdminPanel(user) {
+async function showAdminPanel(user) {
   document.querySelector("#loginForm").hidden = true;
   document.querySelector("#adminPanel").hidden = false;
   document.querySelector("#adminSessionText").textContent = `Sesión: ${user.email}`;
+  await ensureRemoteContent();
+  await loadReports();
   renderAdmin();
 }
 
@@ -580,9 +688,10 @@ function firebaseAuthMessage(code) {
   return messages[code] || "No se pudo iniciar sesión con Firebase.";
 }
 
-function renderAdmin() {
+async function renderAdmin() {
   const content = document.querySelector("#adminContent");
   if (activeTab === "reports") {
+    await loadReports();
     content.innerHTML = renderReports();
     return;
   }
@@ -705,7 +814,7 @@ async function handleAdminSubmit(event) {
     else data[kind].push(item);
   }
 
-  saveData();
+  await saveData();
   renderPublic();
   renderAdmin();
 }
@@ -723,7 +832,7 @@ function filesToDataUrls(files) {
   })));
 }
 
-function handleAdminClick(event) {
+async function handleAdminClick(event) {
   const button = event.target.closest("button[data-action]");
   if (!button) return;
   const action = button.dataset.action;
@@ -744,6 +853,16 @@ function handleAdminClick(event) {
     return;
   }
   if (action === "delete-report" && confirm("¿Eliminar este reporte?")) {
+    const report = data.reports[index];
+    if (report?.id) {
+      try {
+        await deleteDoc(doc(db, "reports", report.id));
+      } catch (error) {
+        console.warn("No se pudo eliminar reporte en Firestore.", error);
+        alert("No se pudo eliminar el reporte en Firestore.");
+        return;
+      }
+    }
     data.reports.splice(index, 1);
   }
   if (action === "promote-report") {
@@ -757,10 +876,18 @@ function handleAdminClick(event) {
       tips: "Verifica antes de pagar; guarda evidencias; reporta perfiles sospechosos",
       images: report.images || []
     });
+    await saveData();
+    if (report?.id) {
+      try {
+        await deleteDoc(doc(db, "reports", report.id));
+      } catch (error) {
+        console.warn("La alerta fue publicada, pero no se pudo eliminar el reporte.", error);
+      }
+    }
     data.reports.splice(index, 1);
   }
 
-  saveData();
+  await saveData();
   renderPublic();
   renderAdmin();
 }
@@ -790,6 +917,7 @@ function fillQuestionForm(index) {
 
 initVisits();
 renderPublic();
+bindFirestoreContent();
 bindNavigation();
 bindImageViewer();
 bindYanapaqBot();
