@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ciberescudo Bolivia</title>
+  <meta name="description" content="Guía boliviana para reconocer, prevenir y reportar estafas digitales.">
+  <link rel="icon" href="assets/app_icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="Ir al inicio">
+      <img src="assets/app_icon.png" alt="Logo de Ciberescudo" class="brand-logo">
+      <span>
+        <strong>Ciberescudo</strong>
+        <small>Bolivia</small>
+      </span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    <nav class="site-nav" id="siteNav" aria-label="Navegación principal">
+      <a href="#delitos">Tipos de delito</a>
+      <a href="#formas">Formas de estafa</a>
+      <a href="#reportar">Reportar</a>
+      <a href="#quiz">Quiz</a>
+      <a href="#yanapaqbot">YanapaqBot</a>
+      <button class="admin-trigger" id="openAdmin" type="button">Admin</button>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="hero-content">
+        <p class="eyebrow">Prevención digital para Bolivia</p>
+        <h1>Ciberescudo</h1>
+        <p class="hero-copy">Aprende a detectar phishing, sextorsión, estafas con QR, falsas inversiones, suplantación de bancos y otros engaños que circulan por WhatsApp, llamadas, redes sociales y Marketplace.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#delitos">Explorar delitos</a>
+          <a class="btn secondary" href="#reportar">Reportar una estafa</a>
+        </div>
+      </div>
+      <div class="hero-panel" aria-label="Indicadores del sitio">
+        <img src="assets/app_icon.png" alt="" class="hero-shield">
+        <div class="stat">
+          <span id="visitCount">0</span>
+          <small>visitas registradas en este navegador</small>
+        </div>
+        <div class="pulse-list">
+          <span>Alertas activas</span>
+          <strong id="alertCount">0 casos</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="yanapaq-band" id="yanapaqbot">
+      <div class="yanapaq-copy">
+        <p class="eyebrow">Asistente educativo</p>
+        <h2>Aprende más con YanapaqBot</h2>
+        <p>Refuerza tus hábitos de seguridad digital con una app educativa offline pensada para explicar estafas, señales de alerta, cuidado de cuentas y rutas de denuncia.</p>
+      </div>
+      <div class="yanapaq-actions">
+        <button class="btn primary" id="openYanapaq" type="button">Aprende más con YanapaqBot</button>
+        <a class="btn secondary" href="https://play.google.com/store/search?q=YanapaqBot&c=apps" target="_blank" rel="noopener noreferrer">Descargar desde Play Store</a>
+        <button class="btn secondary" id="openPrivacy" type="button">Política de privacidad</button>
+      </div>
+    </section>
+
+    <section class="section-band">
+      <div class="section-heading">
+        <p class="eyebrow">Últimos modus operandi</p>
+        <h2>Alertas destacadas</h2>
+        <div class="carousel-controls">
+          <button class="icon-btn" id="prevSlide" type="button" aria-label="Anterior">‹</button>
+          <button class="icon-btn" id="nextSlide" type="button" aria-label="Siguiente">›</button>
+        </div>
+      </div>
+      <div class="carousel" id="carousel" aria-live="polite"></div>
+    </section>
+
+    <section class="section" id="delitos">
+      <div class="section-heading">
+        <p class="eyebrow">Aprende a reconocerlos</p>
+        <h2>Tipos de delito</h2>
+        <p>Conceptos claros, señales de alerta y acciones rápidas para prevenir daños.</p>
+      </div>
+      <div class="grid cards-grid" id="crimeGrid"></div>
+    </section>
+
+    <section class="section alt" id="formas">
+      <div class="section-heading">
+        <p class="eyebrow">Cómo operan</p>
+        <h2>Formas de estafa actuales</h2>
+        <p>Patrones frecuentes observados en Bolivia: QR, falsas ofertas, cuentas suplantadas, créditos inmediatos y presión emocional.</p>
+      </div>
+      <div class="method-list" id="methodList"></div>
+    </section>
+
+    <section class="section report-section" id="reportar">
+      <div class="section-heading">
+        <p class="eyebrow">Confidencial</p>
+        <h2>Reportar una estafa</h2>
+        <p>Para reportar formalmente una estafa en Bolivia, lo más conveniente es ingresar al portal oficial de la ATT. En esta sección también puedes compartir cómo operaron los estafadores para alertar a otras personas y ayudar a que no caigan en la misma trampa.</p>
+        <a class="official-link" href="https://bloquealaestafa.att.gob.bo/" target="_blank" rel="noopener noreferrer">Ir a Bloquea la Estafa ATT</a>
+      </div>
+      <form class="report-form" id="reportForm">
+        <label>
+          Tipo de estafa
+          <input name="type" type="text" placeholder="Ej. WhatsApp, QR, Marketplace, llamada falsa" required>
+        </label>
+        <label>
+          ¿Qué ocurrió?
+          <textarea name="story" rows="5" placeholder="Describe el mensaje, método, perfil, número o señal sospechosa. No incluyas contraseñas." required></textarea>
+        </label>
+        <label>
+          Ciudad o departamento
+          <input name="city" type="text" placeholder="Ej. La Paz, Santa Cruz, Cochabamba">
+        </label>
+        <label>
+          Contacto opcional
+          <input name="contact" type="text" placeholder="Correo o teléfono si deseas que te contacten">
+        </label>
+        <label>
+          Capturas opcionales
+          <input name="images" type="file" accept="image/*" multiple>
+        </label>
+        <button class="btn primary" type="submit">Enviar reporte confidencial</button>
+        <p class="form-status" id="reportStatus" role="status"></p>
+      </form>
+    </section>
+
+    <section class="section quiz-section" id="quiz">
+      <div class="section-heading">
+        <p class="eyebrow">Banco de preguntas</p>
+        <h2>Quiz Ciberescudo</h2>
+        <p>Responde 10 preguntas aleatorias. Las opciones se mezclan en cada partida.</p>
+      </div>
+      <div class="quiz-box">
+        <div class="quiz-top">
+          <strong id="quizProgress">Listo para iniciar</strong>
+          <span id="quizScore">Puntaje: 0</span>
+        </div>
+        <h3 id="questionText">Pon a prueba tu criterio digital.</h3>
+        <div class="answers" id="answers"></div>
+        <div class="quiz-actions">
+          <button class="btn primary" id="startQuiz" type="button">Iniciar quiz</button>
+          <button class="btn secondary" id="nextQuestion" type="button" disabled>Siguiente</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div>
+      <strong>Ciberescudo Bolivia</strong>
+      <p>Educación preventiva. No reemplaza una denuncia formal ante autoridades competentes.</p>
+    </div>
+    <a href="#inicio">Volver arriba</a>
+  </footer>
+
+  <dialog class="detail-modal" id="methodModal">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow" id="methodModalKicker">Forma de estafa</p>
+        <h2 id="methodModalTitle">Detalle</h2>
+      </div>
+      <button class="icon-btn" id="closeMethodModal" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <div class="detail-body" id="methodModalBody"></div>
+  </dialog>
+
+  <dialog class="image-viewer" id="imageViewer">
+    <div class="image-viewer-head">
+      <strong id="imageViewerTitle">Vista de imagen</strong>
+      <button class="icon-btn" id="closeImageViewer" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <img id="imageViewerImg" src="" alt="Imagen ampliada">
+  </dialog>
+
+  <dialog class="yanapaq-modal" id="yanapaqModal">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">YanapaqBot</p>
+        <h2>Aprende más con YanapaqBot</h2>
+      </div>
+      <button class="icon-btn" id="closeYanapaq" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <div class="yanapaq-modal-body">
+      <p>YanapaqBot acompaña el aprendizaje de ciberseguridad con respuestas educativas, ejemplos de estafas, recomendaciones y orientación preventiva para actuar con calma ante mensajes sospechosos.</p>
+      <div class="yanapaq-modal-actions">
+        <a class="btn primary" href="https://play.google.com/store/search?q=YanapaqBot&c=apps" target="_blank" rel="noopener noreferrer">Descargar desde Play Store</a>
+        <button class="btn secondary" id="openPrivacyFromYanapaq" type="button">Revisar política de privacidad</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="privacy-modal" id="privacyModal">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">YanapaqBot</p>
+        <h2>Política de privacidad</h2>
+      </div>
+      <button class="icon-btn" id="closePrivacy" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <article class="privacy-content" id="privacyContent">
+      <p>Cargando política de privacidad...</p>
+    </article>
+  </dialog>
+
+  <dialog class="admin-modal" id="adminModal">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Panel privado</p>
+        <h2>Administrador</h2>
+      </div>
+      <button class="icon-btn" id="closeAdmin" type="button" aria-label="Cerrar">×</button>
+    </div>
+
+    <form class="login-box" id="loginForm">
+      <p>PIN inicial: <strong>1234</strong>. Cambia esta clave en <code>app.js</code> antes de publicar.</p>
+      <label>
+        Clave de administrador
+        <input id="adminPin" type="password" autocomplete="current-password" required>
+      </label>
+      <button class="btn primary" type="submit">Entrar</button>
+      <p class="form-status" id="loginStatus"></p>
+    </form>
+
+    <div class="admin-panel" id="adminPanel" hidden>
+      <div class="tabs" role="tablist">
+        <button class="tab active" type="button" data-tab="alerts">Carousel</button>
+        <button class="tab" type="button" data-tab="crimes">Delitos</button>
+        <button class="tab" type="button" data-tab="methods">Estafas</button>
+        <button class="tab" type="button" data-tab="questions">Quiz</button>
+        <button class="tab" type="button" data-tab="reports">Reportes</button>
+      </div>
+      <div class="admin-content" id="adminContent"></div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
