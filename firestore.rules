@@ -8,7 +8,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return isSignedIn()
-        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == "admin";
     }
 
     match /admins/{userId} {

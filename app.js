@@ -207,7 +207,7 @@ async function saveData() {
     await setDoc(contentRef, contentPayload(), { merge: true });
   } catch (error) {
     console.warn("No se pudo guardar en Firestore.", error);
-    alert("No se pudo guardar en Firestore. Revisa las reglas, el login de admin o tu conexión.");
+    alert(`No se pudo guardar en Firestore.\nCódigo: ${error.code || "sin-código"}\nMensaje: ${error.message || "Sin detalle"}`);
   }
 }
 
@@ -243,6 +243,7 @@ async function ensureRemoteContent() {
     remoteContentLoaded = true;
   } catch (error) {
     console.warn("No se pudo inicializar Firestore.", error);
+    document.querySelector("#loginStatus").textContent = `Firestore no permitió inicializar contenido: ${error.code || "sin-código"}.`;
   }
 }
 
@@ -666,7 +667,7 @@ function bindAdmin() {
 async function showAdminPanel(user) {
   document.querySelector("#loginForm").hidden = true;
   document.querySelector("#adminPanel").hidden = false;
-  document.querySelector("#adminSessionText").textContent = `Sesión: ${user.email}`;
+  document.querySelector("#adminSessionText").textContent = `Sesión: ${user.email} · UID: ${user.uid}`;
   await ensureRemoteContent();
   await loadReports();
   renderAdmin();
