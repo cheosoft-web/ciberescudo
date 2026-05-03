@@ -220,16 +220,24 @@
     </div>
 
     <form class="login-box" id="loginForm">
-      <p>PIN: <strong>*****</strong>. Secreto <code>app.js</code> antes de publicar.</p>
+      <p>Ingresa con el usuario administrador creado en Firebase Authentication.</p>
       <label>
-        Clave de administrador
-        <input id="adminPin" type="password" autocomplete="current-password" required>
+        Correo administrador
+        <input id="adminEmail" type="email" autocomplete="username" required>
+      </label>
+      <label>
+        Contraseña
+        <input id="adminPassword" type="password" autocomplete="current-password" required>
       </label>
       <button class="btn primary" type="submit">Entrar</button>
       <p class="form-status" id="loginStatus"></p>
     </form>
 
     <div class="admin-panel" id="adminPanel" hidden>
+      <div class="admin-session">
+        <span id="adminSessionText">Sesión iniciada</span>
+        <button class="btn secondary" id="logoutAdmin" type="button">Cerrar sesión</button>
+      </div>
       <div class="tabs" role="tablist">
         <button class="tab active" type="button" data-tab="alerts">Carousel</button>
         <button class="tab" type="button" data-tab="crimes">Delitos</button>
@@ -241,6 +249,6 @@
     </div>
   </dialog>
 
-  <script src="app.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>

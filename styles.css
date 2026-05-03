@@ -724,6 +724,19 @@ input:focus, textarea:focus {
   margin: 1rem 0;
 }
 
+.admin-session {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: .8rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .04);
+  color: var(--muted);
+}
+
 .tab {
   border: 1px solid var(--line);
   border-radius: 8px;

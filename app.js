@@ -1,4 +1,24 @@
-const ADMIN_PIN = "Pimp0n7911.";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAbmxxyNZqPBqe07YvCfPhRYreDmj6DKPA",
+  authDomain: "ciberescudo.firebaseapp.com",
+  projectId: "ciberescudo",
+  storageBucket: "ciberescudo.firebasestorage.app",
+  messagingSenderId: "264153412090",
+  appId: "1:264153412090:web:e2a7d846aad6c38361b443",
+  measurementId: "G-QC9X9H4Q1Q"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+
 const STORE_KEY = "ciberescudo-data-v1";
 const VISITS_KEY = "ciberescudo-visits";
 const PRIVACY_POLICY_URL = "assets/politica_privacidad.md";
@@ -501,16 +521,28 @@ function bindAdmin() {
   const modal = document.querySelector("#adminModal");
   document.querySelector("#openAdmin").addEventListener("click", () => modal.showModal());
   document.querySelector("#closeAdmin").addEventListener("click", () => modal.close());
-  document.querySelector("#loginForm").addEventListener("submit", event => {
+  document.querySelector("#loginForm").addEventListener("submit", async event => {
     event.preventDefault();
-    const pin = document.querySelector("#adminPin").value;
-    if (pin !== ADMIN_PIN) {
-      document.querySelector("#loginStatus").textContent = "Clave incorrecta.";
-      return;
+    const email = document.querySelector("#adminEmail").value.trim();
+    const password = document.querySelector("#adminPassword").value;
+    const status = document.querySelector("#loginStatus");
+
+    status.textContent = "Verificando credenciales...";
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      status.textContent = "";
+    } catch (error) {
+      status.textContent = firebaseAuthMessage(error.code);
     }
-    document.querySelector("#loginForm").hidden = true;
-    document.querySelector("#adminPanel").hidden = false;
-    renderAdmin();
+  });
+
+  document.querySelector("#logoutAdmin").addEventListener("click", async () => {
+    await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, user => {
+    if (user) showAdminPanel(user);
+    else showAdminLogin();
   });
 
   document.querySelector(".tabs").addEventListener("click", event => {
@@ -523,6 +555,29 @@ function bindAdmin() {
 
   document.querySelector("#adminContent").addEventListener("click", handleAdminClick);
   document.querySelector("#adminContent").addEventListener("submit", handleAdminSubmit);
+}
+
+function showAdminPanel(user) {
+  document.querySelector("#loginForm").hidden = true;
+  document.querySelector("#adminPanel").hidden = false;
+  document.querySelector("#adminSessionText").textContent = `Sesión: ${user.email}`;
+  renderAdmin();
+}
+
+function showAdminLogin() {
+  document.querySelector("#loginForm").hidden = false;
+  document.querySelector("#adminPanel").hidden = true;
+  document.querySelector("#adminPassword").value = "";
+}
+
+function firebaseAuthMessage(code) {
+  const messages = {
+    "auth/invalid-credential": "Correo o contraseña incorrectos.",
+    "auth/user-disabled": "Este usuario administrador está deshabilitado.",
+    "auth/too-many-requests": "Demasiados intentos. Espera unos minutos e intenta nuevamente.",
+    "auth/network-request-failed": "No hay conexión con Firebase. Revisa internet o el dominio autorizado."
+  };
+  return messages[code] || "No se pudo iniciar sesión con Firebase.";
 }
 
 function renderAdmin() {
